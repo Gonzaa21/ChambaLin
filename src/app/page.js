@@ -1,31 +1,88 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import { supabase } from "../lib/supabase";
 
 const categories = [
   { name: "All", icon: "✳" },
-  { name: "Home", icon: "⌂" },
-  { name: "Repairs", icon: "⌁" },
+  { name: "Home & Repairs", icon: "⌂" },
   { name: "Lessons", icon: "▤" },
   { name: "Pets", icon: "♡" },
   { name: "Errands", icon: "↗" },
   { name: "Tech", icon: "⌘" },
+  { name: "Other", icon: "＋" },
 ];
 
-const jobs = [
-  { id: 1, title: "Assemble a desk", category: "Home", price: "$18,000", unit: "per job", location: "Villa Urquiza", distance: "1.2 km", time: "Today · Flexible", initials: "LM", person: "Lucía M.", rating: "4.9", reviews: 18, color: "peach", description: "I bought a desk and need a hand assembling it. I already have all the parts and basic tools.", tags: ["Furniture", "1–2 hours"] },
-  { id: 2, title: "Walk my dog", category: "Pets", price: "$6,000", unit: "per walk", location: "Belgrano", distance: "2.1 km", time: "Tomorrow · 10:00 AM", initials: "FR", person: "Facundo R.", rating: "5.0", reviews: 12, color: "mint", description: "Looking for a responsible person to walk Milo, a medium-sized and very calm dog, for 45 minutes.", tags: ["Dogs", "45 min"] },
-  { id: 3, title: "Fix a faucet", category: "Repairs", price: "To be agreed", unit: "depending on task", location: "Colegiales", distance: "2.8 km", time: "This week", initials: "CP", person: "Carla P.", rating: "4.8", reviews: 26, color: "blue", description: "The kitchen faucet is leaking water. I would like to arrange a visit to check and fix the issue.", tags: ["Plumbing", "Home"] },
-  { id: 4, title: "Math tutoring", category: "Lessons", price: "$8,500", unit: "per hour", location: "Núñez", distance: "3.4 km", time: "To be scheduled", initials: "TG", person: "Tomás G.", rating: "5.0", reviews: 9, color: "lilac", description: "Need tutoring to prepare for a high school math exam. Ideally one or two sessions this week.", tags: ["High School", "Online or in-person"] },
-  { id: 5, title: "Install a printer", category: "Tech", price: "$10,000", unit: "estimated", location: "Saavedra", distance: "3.9 km", time: "Today · Afternoon", initials: "MS", person: "Martín S.", rating: "4.7", reviews: 14, color: "yellow", description: "Need to connect a Wi-Fi printer to a laptop and set it up ready to print.", tags: ["Computing", "1 hour"] },
-  { id: 6, title: "Run a few errands", category: "Errands", price: "$5,000", unit: "per task", location: "Villa Devoto", distance: "4.2 km", time: "Tomorrow", initials: "AV", person: "Ana V.", rating: "4.9", reviews: 21, color: "pink", description: "Looking for help picking up a package and buying a couple of things nearby.", tags: ["Shopping", "Nearby"] },
-];
+const categoryLabels = {
+  "hogar-reparaciones": "Home & Repairs",
+  "clases-particulares": "Lessons",
+  mascotas: "Pets",
+  mandados: "Errands",
+  tecnologia: "Tech",
+  "otros-servicios": "Other",
+};
+
+const categoryColors = {
+  "Home & Repairs": "peach",
+  Lessons: "lilac",
+  Pets: "mint",
+  Errands: "pink",
+  Tech: "yellow",
+  Other: "blue",
+};
+
+function formatPrice(task) {
+  if (task.task_type === "volunteer") return "Volunteer";
+  if (task.price === null || task.price === undefined) return "TBD";
+  return `$${Number(task.price).toLocaleString("en-US")}`;
+}
+
+function formatPublishedDate(value) {
+  if (!value) return "Recently posted";
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return "Recently posted";
+  const days = Math.floor((Date.now() - date.getTime()) / 86400000);
+  if (days <= 0) return "Posted today";
+  if (days === 1) return "Posted yesterday";
+  return `Posted ${days} days ago`;
+}
+
+function toJob(task) {
+  const category = categoryLabels[task.category?.slug] || task.category?.name || "Other";
+  const person = task.owner?.full_name?.trim() || "Chambalín User";
+  const initials = person
+    .split(/\s+/)
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((part) => part[0].toUpperCase())
+    .join("") || "CH";
+
+  return {
+    id: task.id,
+    title: task.title,
+    category,
+    price: formatPrice(task),
+    unit: task.task_type === "volunteer" ? "unpaid" : task.price == null ? "price TBD" : "per task",
+    location: task.location || task.owner?.location || "Location not specified",
+    time: formatPublishedDate(task.created_at),
+    initials,
+    person,
+    color: categoryColors[category] || "mint",
+    description: task.description,
+    tags: [task.task_type === "volunteer" ? "Volunteer" : "Service", category],
+    taskType: task.task_type,
+    createdAt: task.created_at,
+  };
+}
 
 function Icon({ children, className = "" }) {
   return <span aria-hidden="true" className={`icon ${className}`}>{children}</span>;
 }
 
 export default function Home() {
+  const [jobs, setJobs] = useState([]);
+  const [loadingJobs, setLoadingJobs] = useState(true);
+  const [jobsError, setJobsError] = useState("");
   const [query, setQuery] = useState("");
   const [category, setCategory] = useState("All");
   const [sort, setSort] = useState("recommended");
@@ -34,6 +91,40 @@ export default function Home() {
   const [saved, setSaved] = useState([]);
   const [mobileMenu, setMobileMenu] = useState(false);
 
+  useEffect(() => {
+    let cancelled = false;
+
+    async function loadTasks() {
+      setLoadingJobs(true);
+      setJobsError("");
+
+      const { data, error } = await supabase
+        .from("tasks")
+        .select(`
+          id, title, description, location, price, task_type, status, created_at,
+          category:categories(name, slug),
+          owner:profiles(full_name, location)
+        `)
+        .eq("status", "open")
+        .order("created_at", { ascending: false });
+
+      if (cancelled) return;
+
+      if (error) {
+        console.error("Error loading Chambalín tasks:", error.message);
+        setJobsError("We couldn't load the tasks. Please try refreshing the page.");
+        setJobs([]);
+      } else {
+        setJobs((data || []).map(toJob));
+      }
+
+      setLoadingJobs(false);
+    }
+
+    loadTasks();
+    return () => { cancelled = true; };
+  }, []);
+
   const filteredJobs = useMemo(() => {
     let result = jobs.filter((job) => {
       const matchesCategory = category === "All" || job.category === category;
@@ -41,9 +132,9 @@ export default function Home() {
       return matchesCategory && text.includes(query.toLowerCase().trim());
     });
     if (sort === "price") result = [...result].sort((a, b) => parseInt(a.price.replace(/\D/g, "") || "999999") - parseInt(b.price.replace(/\D/g, "") || "999999"));
-    if (sort === "rating") result = [...result].sort((a, b) => Number(b.rating) - Number(a.rating));
+    if (sort === "recent") result = [...result].sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
     return result;
-  }, [query, category, sort]);
+  }, [jobs, query, category, sort]);
 
   const toggleSaved = (id) => setSaved((prev) => prev.includes(id) ? prev.filter((item) => item !== id) : [...prev, id]);
 
@@ -60,7 +151,7 @@ export default function Home() {
           <a href="#community">Community</a>
         </nav>
         <div className="header-actions">
-          <button className="text-button saved-link" onClick={() => { setCategory("All"); setQuery(""); document.getElementById("explore")?.scrollIntoView({ behavior: "smooth" }); }}>
+          <button className="text-button saved-link" onClick={() => { setCategory("All"); setQuery(""); document.getElementById("explorar")?.scrollIntoView({ behavior: "smooth" }); }}>
             <Icon>♡</Icon> Saved {saved.length > 0 && <span className="saved-count">{saved.length}</span>}
           </button>
           <button className="button button-dark button-small" onClick={() => setShowPublish(true)}><span>＋</span> Post a task</button>
@@ -75,8 +166,8 @@ export default function Home() {
           <p>Find someone reliable for those small things that make a big difference.</p>
           <div className="hero-search">
             <Icon>⌕</Icon>
-            <input value={query} onChange={(e) => { setQuery(e.target.value); document.getElementById("explore")?.scrollIntoView({ behavior: "smooth", block: "start" }); }} placeholder="e.g. fix a faucet, walk the dog..." aria-label="Search tasks" />
-            <button onClick={() => document.getElementById("explore")?.scrollIntoView({ behavior: "smooth" })}>Search <span>↗</span></button>
+            <input value={query} onChange={(e) => { setQuery(e.target.value); document.getElementById("explorar")?.scrollIntoView({ behavior: "smooth", block: "start" }); }} placeholder="e.g. fix a faucet, walk the dog..." aria-label="Search tasks" />
+            <button onClick={() => document.getElementById("explorar")?.scrollIntoView({ behavior: "smooth" })}>Search <span>↗</span></button>
           </div>
           <div className="hero-footnote"><Icon>⌖</Icon> Services in your area <span className="footnote-separator">·</span> Real people, real tasks</div>
         </div>
@@ -92,10 +183,9 @@ export default function Home() {
         </div>
       </section>
 
-      <section className="category-section" id="explore">
+      <section className="category-section" id="explorar">
         <div className="section-heading category-heading">
           <div><span className="section-kicker">FIND YOUR GIG</span><h2>What do you need done?</h2></div>
-          <span className="subtle-note">Select a category to get started</span>
         </div>
         <div className="category-list">
           {categories.map((item) => <button key={item.name} onClick={() => setCategory(item.name)} className={`category-pill ${category === item.name ? "category-selected" : ""}`}><span className="category-icon">{item.icon}</span>{item.name}</button>)}
@@ -105,21 +195,21 @@ export default function Home() {
       <section className="jobs-section">
         <div className="section-heading jobs-heading">
           <div><span className="section-kicker">OPPORTUNITIES NEAR YOU</span><h2>{query ? "Search results" : category === "All" ? "Tasks to solve" : `${category} tasks`} <span className="result-count">{filteredJobs.length}</span></h2></div>
-          <label className="sort-control">Sort by <select value={sort} onChange={(e) => setSort(e.target.value)}><option value="recommended">Recommended</option><option value="rating">Top rated</option><option value="price">Estimated price</option></select><span>⌄</span></label>
+          <label className="sort-control">Sort by <select value={sort} onChange={(e) => setSort(e.target.value)}><option value="recommended">Recommended</option><option value="recent">Most recent</option><option value="price">Estimated price</option></select><span>⌄</span></label>
         </div>
-        {filteredJobs.length ? <div className="jobs-grid">
+        {loadingJobs ? <div className="empty-state"><span>◷</span><h3>Loading tasks...</h3><p>We are searching for posts on Chambalín.</p></div> : jobsError ? <div className="empty-state"><span>!</span><h3>We couldn't load the tasks</h3><p>{jobsError}</p><button className="button button-dark" onClick={() => window.location.reload()}>Try again</button></div> : filteredJobs.length ? <div className="jobs-grid">
           {filteredJobs.map((job) => <article className="job-card" key={job.id}>
             <div className={`job-visual ${job.color}`}>
               <span className="job-category">{job.category}</span>
               <button className={`save-button ${saved.includes(job.id) ? "is-saved" : ""}`} aria-label={saved.includes(job.id) ? "Remove from saved" : "Save task"} onClick={() => toggleSaved(job.id)}>{saved.includes(job.id) ? "♥" : "♡"}</button>
-              <div className="visual-symbol">{job.category === "Home" ? "⌂" : job.category === "Pets" ? "♡" : job.category === "Repairs" ? "⌁" : job.category === "Lessons" ? "▤" : job.category === "Tech" ? "⌘" : "↗"}</div>
+              <div className="visual-symbol">{job.category === "Home & Repairs" ? "⌂" : job.category === "Pets" ? "♡" : job.category === "Repairs" ? "⌁" : job.category === "Lessons" ? "▤" : job.category === "Tech" ? "⌘" : "↗"}</div>
               <span className="visual-caption">CHAMBALÍN <span>·</span> NEAR YOU</span>
             </div>
             <div className="job-content">
-              <div className="job-meta"><span><Icon>⌖</Icon> {job.location}</span><span className="meta-dot">·</span><span>{job.distance}</span></div>
+              <div className="job-meta"><span><Icon>⌖</Icon> {job.location}</span></div>
               <h3>{job.title}</h3>
               <div className="job-time"><Icon>◷</Icon> {job.time}</div>
-              <div className="job-card-bottom"><div className="price"><strong>{job.price}</strong><span>{job.unit}</span></div><div className="rating"><span>★</span> {job.rating} <small>({job.reviews})</small></div></div>
+              <div className="job-card-bottom"><div className="price"><strong>{job.price}</strong><span>{job.unit}</span></div><div className="rating"><span>•</span> {job.taskType === "volunteer" ? "Volunteer" : "Available"}</div></div>
               <div className="card-divider"></div>
               <div className="job-poster"><span className={`poster-avatar ${job.color}`}>{job.initials}</span><span className="poster-name">{job.person}<small>Posted a task</small></span><button className="arrow-button" onClick={() => setSelectedJob(job)} aria-label={`View ${job.title}`}>↗</button></div>
               <button className="card-open" onClick={() => setSelectedJob(job)}>View task <span>→</span></button>
@@ -129,22 +219,22 @@ export default function Home() {
         <div className="load-more-wrap"><button className="button button-outline" onClick={() => { setQuery(""); setCategory("All"); setSort("recommended"); }}>Explore all tasks <span>↗</span></button></div>
       </section>
 
-      <section className="trust-strip" id="how-it-works">
+      <section className="trust-strip" id="como-funciona">
         <div className="trust-intro"><span className="section-kicker">SIMPLER. CLOSER.</span><h2>A helping hand nearby<br />can change your day.</h2><p>Chambalín connects what you need with people who can help.</p></div>
         <div className="trust-step"><span className="step-number">01</span><div className="step-icon">⌕</div><h3>Find</h3><p>Search by task, category, or area.</p></div>
         <div className="trust-step"><span className="step-number">02</span><div className="step-icon">↔</div><h3>Connect</h3><p>Chat and agree on price and schedule.</p></div>
         <div className="trust-step"><span className="step-number">03</span><div className="step-icon">✳</div><h3>Share your experience</h3><p>Leave a review after completing the task.</p></div>
       </section>
 
-      <footer className="footer" id="community"><a className="brand footer-brand" href="#"><span className="brand-mark"><span></span><span></span><span></span></span><span>chambalín<span className="brand-dot">.</span></span></a><span>Small tasks, real solutions.</span><span className="footer-right">© Copyright 2026 <span>|</span> ChambaLín</span></footer>
+      <footer className="footer" id="comunidad"><a className="brand footer-brand" href="#"><span className="brand-mark"><span></span><span></span><span></span></span><span>chambalín<span className="brand-dot">.</span></span></a><span>Small tasks, real solutions.</span><span className="footer-right">Made to connect <span>♥</span> nearby.</span></footer>
 
       {selectedJob && <div className="modal-backdrop" role="presentation" onMouseDown={(e) => { if (e.target === e.currentTarget) setSelectedJob(null); }}><section className="detail-modal" role="dialog" aria-modal="true" aria-labelledby="detail-title">
         <button className="modal-close" onClick={() => setSelectedJob(null)} aria-label="Close">×</button>
         <div className={`detail-visual ${selectedJob.color}`}><span className="job-category">{selectedJob.category}</span><div className="visual-symbol">{selectedJob.category === "Pets" ? "♡" : selectedJob.category === "Repairs" ? "⌁" : "✳"}</div></div>
-        <div className="detail-body"><div className="job-meta"><Icon>⌖</Icon> {selectedJob.location} · {selectedJob.distance}</div><h2 id="detail-title">{selectedJob.title}</h2><div className="detail-price">{selectedJob.price} <small>{selectedJob.unit}</small></div><p>{selectedJob.description}</p><div className="detail-tags">{selectedJob.tags.map(tag => <span key={tag}>{tag}</span>)}</div><div className="detail-person"><span className={`poster-avatar ${selectedJob.color}`}>{selectedJob.initials}</span><span><b>{selectedJob.person}</b><small>★ {selectedJob.rating} · {selectedJob.reviews} reviews</small></span><span className="profile-note">Sample profile</span></div><div className="notice"><span>ⓘ</span><p>Before agreeing on a task, confirm details, price, and terms. Ratings offer guidance but do not guarantee safety.</p></div><button className="button button-dark button-wide" onClick={() => alert("This is a demo preview. Direct contact will be implemented in a future release.")}>I'm interested in this task <span>↗</span></button></div>
+        <div className="detail-body"><div className="job-meta"><Icon>⌖</Icon> {selectedJob.location}</div><h2 id="detail-title">{selectedJob.title}</h2><div className="detail-price">{selectedJob.price} <small>{selectedJob.unit}</small></div><p>{selectedJob.description}</p><div className="detail-tags">{selectedJob.tags.map(tag => <span key={tag}>{tag}</span>)}</div><div className="detail-person"><span className={`poster-avatar ${selectedJob.color}`}>{selectedJob.initials}</span><span><b>{selectedJob.person}</b><small>Posted this task on Chambalín</small></span><span className="profile-note">Profile</span></div><div className="notice"><span>ⓘ</span><p>Before agreeing on a task, confirm details, price, and terms. Do not share unnecessary personal data and coordinate responsibly.</p></div><button className="button button-dark button-wide" onClick={() => alert("This is a demo preview. Direct contact will be implemented in a future release.")}>I'm interested in this task <span>↗</span></button></div>
       </section></div>}
 
-      {showPublish && <div className="modal-backdrop" role="presentation" onMouseDown={(e) => { if (e.target === e.currentTarget) setShowPublish(false); }}><section className="publish-modal" role="dialog" aria-modal="true" aria-labelledby="publish-title"><button className="modal-close" onClick={() => setShowPublish(false)} aria-label="Close">×</button><span className="section-kicker">YOUR TASK, UNDERWAY</span><h2 id="publish-title">What do you need to solve?</h2><p>This initial version is a visual demonstration. Task posting will be enabled in an upcoming release.</p><label>Task name<input placeholder="e.g. Need to paint a room" /></label><label>Category<select defaultValue=""><option value="" disabled>Select a category</option>{categories.slice(1).map(c => <option key={c.name}>{c.name}</option>)}</select></label><label>Approximate location<input placeholder="e.g. Brooklyn, NY" /></label><button className="button button-dark button-wide" onClick={() => setShowPublish(false)}>Got it <span>✓</span></button></section></div>}
+      {showPublish && <div className="modal-backdrop" role="presentation" onMouseDown={(e) => { if (e.target === e.currentTarget) setShowPublish(false); }}><section className="publish-modal" role="dialog" aria-modal="true" aria-labelledby="publish-title"><button className="modal-close" onClick={() => setShowPublish(false)} aria-label="Close">×</button><span className="section-kicker">YOUR TASK, UNDERWAY</span><h2 id="publish-title">What do you need to solve?</h2><p>Task posting will be enabled once login and registration are implemented.</p><label>Task name<input placeholder="e.g. Need to paint a room" /></label><label>Category<select defaultValue=""><option value="" disabled>Select a category</option>{categories.slice(1).map(c => <option key={c.name}>{c.name}</option>)}</select></label><label>Approximate location<input placeholder="e.g. Brooklyn, NY" /></label><button className="button button-dark button-wide" onClick={() => setShowPublish(false)}>Got it <span>✓</span></button></section></div>}
     </main>
   );
 }
