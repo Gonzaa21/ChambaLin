@@ -148,6 +148,11 @@ line-height: 1.6;}
 .account-details p {margin: 6px 0;font-size: 13px;}
 .account-details p strong {color: #56705e;}
 .auth-card > .auth-submit {display: flex;align-items: center;justify-content: center;width: 100%;box-sizing: border-box;text-decoration: none;}
+.auth-label textarea,
+.auth-label select {width: 100%;box-sizing: border-box;min-height: 48px;padding: 12px 14px;border: 1px solid #dedfd4;border-radius: 10px;background: #fff;color: #17251d;font: inherit;font-weight: 400;}
+.auth-label textarea {resize: vertical;line-height: 1.5;}
+.auth-label textarea:focus,
+.auth-label select:focus {outline: none;border-color: #245a40;box-shadow: 0 0 0 3px rgba(36, 90, 64, 0.12);}
 @media (max-width: 480px) {.auth-card {padding: 28px 22px;border-radius: 18px;}}
 @media(min-width:1400px){.app-shell{padding:0 7%}.hero{min-height:485px}.job-visual{height:160px}}
 @media(max-width:1000px){.app-shell{padding:0 4%}.nav-links{gap:17px}.header-actions{gap:12px}.hero{min-height:410px}.hero h1{font-size:53px}.hero-art{transform:scale(.9);transform-origin:center right;margin-left:-25px}.jobs-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.trust-strip{grid-template-columns:repeat(3,1fr);padding:30px}.trust-intro{grid-column:1/-1}.trust-intro h2 br{display:none}.trust-intro p{max-width:500px}}
