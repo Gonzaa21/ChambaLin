@@ -153,6 +153,25 @@ line-height: 1.6;}
 .auth-label textarea {resize: vertical;line-height: 1.5;}
 .auth-label textarea:focus,
 .auth-label select:focus {outline: none;border-color: #245a40;box-shadow: 0 0 0 3px rgba(36, 90, 64, 0.12);}
+.task-applications {margin-top: 24px;padding-top: 22px;border-top: 1px solid #e7e5da;}
+.task-applications h3 {margin: 0 0 8px;font-size: 18px;}
+.task-applications p {line-height: 1.6;overflow-wrap: anywhere;}
+.task-applications form {display: flex;flex-direction: column;gap: 12px;}
+.application-label {font-size: 13px;font-weight: 600;}
+.task-applications textarea {width: 100%;box-sizing: border-box;padding: 12px;border: 1px solid #dcdccf;border-radius: 10px;font: inherit;resize: vertical;}
+.task-applications textarea:focus {outline: 2px solid #a8bd82;outline-offset: 2px;}
+.application-list {display: grid;gap: 14px;margin-top: 16px;}
+.application-item {padding: 14px;border: 1px solid #e7e5da;border-radius: 12px;}
+.application-heading {display: flex;align-items: center;justify-content: space-between;flex-wrap: wrap;gap: 8px;}
+.application-status {display: inline-block;padding: 5px 9px;border-radius: 20px;background: #f1f0e8;font-size: 12px;text-transform: capitalize;}
+.status-accepted {background: #e0f1df;}
+.status-rejected,
+.status-withdrawn {background: #f8e4df;}
+.application-actions {display: flex;flex-wrap: wrap;gap: 8px;}
+.application-error {color: #a42c25;font-size: 13px;}
+.application-notice {color: #32683e;font-size: 13px;}
+.application-close {margin-top: 17px;padding: 8px 0;border: 0;background: transparent;color: #7a8579;font: 600 11px "DM Sans", sans-serif;cursor: pointer;}
+.application-close:hover {color: var(--green);}
 @media (max-width: 480px) {.auth-card {padding: 28px 22px;border-radius: 18px;}}
 @media(min-width:1400px){.app-shell{padding:0 7%}.hero{min-height:485px}.job-visual{height:160px}}
 @media(max-width:1000px){.app-shell{padding:0 4%}.nav-links{gap:17px}.header-actions{gap:12px}.hero{min-height:410px}.hero h1{font-size:53px}.hero-art{transform:scale(.9);transform-origin:center right;margin-left:-25px}.jobs-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.trust-strip{grid-template-columns:repeat(3,1fr);padding:30px}.trust-intro{grid-column:1/-1}.trust-intro h2 br{display:none}.trust-intro p{max-width:500px}}

@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { supabase } from "../lib/supabase";
+import TaskApplications from "./task-applications";
 
 const categories = [
   { name: "All", icon: "✳" },
@@ -60,6 +61,7 @@ function toJob(task) {
   return {
     id: task.id,
     title: task.title,
+    ownerId: task.owner_id,
     category,
     price: formatPrice(task),
     unit: task.task_type === "volunteer" ? "unpaid" : task.price == null ? "price TBD" : "per task",
@@ -101,7 +103,7 @@ export default function Home() {
       const { data, error } = await supabase
         .from("tasks")
         .select(`
-          id, title, description, location, price, task_type, status, created_at,
+          id, owner_id, title, description, location, price, task_type, status, created_at,
           category:categories(name, slug),
           owner:profiles(full_name, location)
         `)
@@ -231,7 +233,7 @@ export default function Home() {
       {selectedJob && <div className="modal-backdrop" role="presentation" onMouseDown={(e) => { if (e.target === e.currentTarget) setSelectedJob(null); }}><section className="detail-modal" role="dialog" aria-modal="true" aria-labelledby="detail-title">
         <button className="modal-close" onClick={() => setSelectedJob(null)} aria-label="Close">×</button>
         <div className={`detail-visual ${selectedJob.color}`}><span className="job-category">{selectedJob.category}</span><div className="visual-symbol">{selectedJob.category === "Pets" ? "♡" : selectedJob.category === "Repairs" ? "⌁" : "✳"}</div></div>
-        <div className="detail-body"><div className="job-meta"><Icon>⌖</Icon> {selectedJob.location}</div><h2 id="detail-title">{selectedJob.title}</h2><div className="detail-price">{selectedJob.price} <small>{selectedJob.unit}</small></div><p>{selectedJob.description}</p><div className="detail-tags">{selectedJob.tags.map(tag => <span key={tag}>{tag}</span>)}</div><div className="detail-person"><span className={`poster-avatar ${selectedJob.color}`}>{selectedJob.initials}</span><span><b>{selectedJob.person}</b><small>Posted this task on Chambalín</small></span><span className="profile-note">Profile</span></div><div className="notice"><span>ⓘ</span><p>Before agreeing on a task, confirm details, price, and terms. Do not share unnecessary personal data and coordinate responsibly.</p></div><button className="button button-dark button-wide" onClick={() => alert("This is a demo preview. Direct contact will be implemented in a future release.")}>I'm interested in this task <span>↗</span></button></div>
+        <div className="detail-body"><div className="job-meta"><Icon>⌖</Icon> {selectedJob.location}</div><h2 id="detail-title">{selectedJob.title}</h2><div className="detail-price">{selectedJob.price} <small>{selectedJob.unit}</small></div><p>{selectedJob.description}</p><div className="detail-tags">{selectedJob.tags.map(tag => <span key={tag}>{tag}</span>)}</div><div className="detail-person"><span className={`poster-avatar ${selectedJob.color}`}>{selectedJob.initials}</span><span><b>{selectedJob.person}</b><small>Posted this task on Chambalín</small></span><span className="profile-note">Profile</span></div><TaskApplications task={selectedJob}onClose={() => setSelectedJob(null)}/><div className="notice"><span>ⓘ</span><p>Before agreeing on a task, confirm details, price, and terms. Do not share unnecessary personal data and coordinate responsibly.</p></div></div>
       </section></div>}
 
       {showPublish && <div className="modal-backdrop" role="presentation" onMouseDown={(e) => { if (e.target === e.currentTarget) setShowPublish(false); }}><section className="publish-modal" role="dialog" aria-modal="true" aria-labelledby="publish-title"><button className="modal-close" onClick={() => setShowPublish(false)} aria-label="Close">×</button><span className="section-kicker">YOUR TASK, UNDERWAY</span><h2 id="publish-title">What do you need to solve?</h2><p>Task posting will be enabled once login and registration are implemented.</p><label>Task name<input placeholder="e.g. Need to paint a room" /></label><label>Category<select defaultValue=""><option value="" disabled>Select a category</option>{categories.slice(1).map(c => <option key={c.name}>{c.name}</option>)}</select></label><label>Approximate location<input placeholder="e.g. Brooklyn, NY" /></label><button className="button button-dark button-wide" onClick={() => setShowPublish(false)}>Got it <span>✓</span></button></section></div>}
