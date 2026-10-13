@@ -172,6 +172,25 @@ line-height: 1.6;}
 .application-notice {color: #32683e;font-size: 13px;}
 .application-close {margin-top: 17px;padding: 8px 0;border: 0;background: transparent;color: #7a8579;font: 600 11px "DM Sans", sans-serif;cursor: pointer;}
 .application-close:hover {color: var(--green);}
+.account-card {max-width: 480px;}
+.account-avatar {width: 88px;height: 88px;margin: 22px auto;border-radius: 50%;overflow: hidden;display: grid;place-items: center;background: #edf1e6;color: var(--green);font-family: "Manrope", sans-serif;font-size: 32px;font-weight: 800;}
+.account-avatar img {width: 100%;height: 100%;object-fit: cover;}
+.account-form {display: flex;flex-direction: column;gap: 9px;text-align: left;}
+.account-form label {margin-top: 8px;color: var(--ink);font-size: 12px;font-weight: 700;}
+.account-form input,
+.account-form textarea {width: 100%;box-sizing: border-box;padding: 12px 13px;border: 1px solid var(--line);border-radius: 9px;background: white;color: var(--ink);font: inherit;font-size: 13px;}
+.account-form textarea {resize: vertical;min-height: 100px;}
+.account-form input:focus,
+.account-form textarea:focus {outline: 2px solid #b5c89b;outline-offset: 1px;}
+.account-email {display: flex;flex-direction: column;gap: 5px;margin: 14px 0;color: var(--muted);font-size: 12px;overflow-wrap: anywhere;}
+.account-email strong {color: var(--ink);}
+.account-success {color: #32683e;font-size: 13px;}
+.account-signout {display: block;margin: 16px auto 10px;padding: 8px 12px;border: 0;background: transparent;color: var(--muted);font: inherit;font-size: 13px;cursor: pointer;}
+.account-form button:disabled {opacity: 0.65;cursor: wait;}
+.header-profile {display: grid;place-items: center;width: 40px;height: 40px;flex-shrink: 0;overflow: hidden;border: 1px solid var(--line);border-radius: 50%;background: #edf1e6;color: var(--green);text-decoration: none;font-weight: 800;}
+.header-profile img {width: 100%;height: 100%;object-fit: cover;}
+.header-profile span {font-size: 15px;}
+.header-profile:focus-visible {outline: 2px solid var(--green);outline-offset: 3px;}
 @media (max-width: 480px) {.auth-card {padding: 28px 22px;border-radius: 18px;}}
 @media(min-width:1400px){.app-shell{padding:0 7%}.hero{min-height:485px}.job-visual{height:160px}}
 @media(max-width:1000px){.app-shell{padding:0 4%}.nav-links{gap:17px}.header-actions{gap:12px}.hero{min-height:410px}.hero h1{font-size:53px}.hero-art{transform:scale(.9);transform-origin:center right;margin-left:-25px}.jobs-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.trust-strip{grid-template-columns:repeat(3,1fr);padding:30px}.trust-intro{grid-column:1/-1}.trust-intro h2 br{display:none}.trust-intro p{max-width:500px}}

@@ -3,6 +3,8 @@
 import { useEffect, useMemo, useState } from "react";
 import { supabase } from "../lib/supabase";
 import TaskApplications from "./task-applications";
+import Link from "next/link";
+import { useAuth } from "../lib/use-auth";
 
 const categories = [
   { name: "All", icon: "✳" },
@@ -92,6 +94,8 @@ export default function Home() {
   const [showPublish, setShowPublish] = useState(false);
   const [saved, setSaved] = useState([]);
   const [mobileMenu, setMobileMenu] = useState(false);
+  const { user } = useAuth();
+  const [accountProfile, setAccountProfile] = useState(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -127,6 +131,33 @@ export default function Home() {
     return () => { cancelled = true; };
   }, []);
 
+  useEffect(() => {
+    let cancelled = false;
+
+    async function loadAccountProfile() {
+      if (!user) {
+        setAccountProfile(null);
+        return;
+      }
+
+      const { data, error } = await supabase
+        .from("profiles")
+        .select("full_name, avatar_url")
+        .eq("id", user.id)
+        .maybeSingle();
+
+      if (!cancelled) {
+        setAccountProfile(error ? null : data);
+      }
+    }
+
+    loadAccountProfile();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [user]);
+
   const filteredJobs = useMemo(() => {
     let result = jobs.filter((job) => {
       const matchesCategory = category === "All" || job.category === category;
@@ -157,6 +188,7 @@ export default function Home() {
             <Icon>♡</Icon> Saved {saved.length > 0 && <span className="saved-count">{saved.length}</span>}
           </button>
           <button className="button button-dark button-small" onClick={() => setShowPublish(true)}><span>＋</span> Post a task</button>
+          {user ? (<Link href="/account" className="header-profile" aria-label="Open your profile" title={accountProfile?.full_name || "Your profile"}>{accountProfile?.avatar_url ? ( <img src={accountProfile.avatar_url} alt=""/>) : (<span> {(accountProfile?.full_name || user.email || "U").trim().charAt(0).toUpperCase()}</span>)}</Link>) : (<Link className="button button-outline button-small" href="/auth">Sign in</Link>)}
         </div>
         <button className="menu-toggle" aria-label="Open menu" onClick={() => setMobileMenu(!mobileMenu)}>{mobileMenu ? "×" : "☰"}</button>
       </header>
