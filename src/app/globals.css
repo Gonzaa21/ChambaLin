@@ -191,6 +191,24 @@ line-height: 1.6;}
 .header-profile img {width: 100%;height: 100%;object-fit: cover;}
 .header-profile span {font-size: 15px;}
 .header-profile:focus-visible {outline: 2px solid var(--green);outline-offset: 3px;}
+.public-profile-page {min-height: 100vh;box-sizing: border-box;display: grid;place-items: center;padding: 32px 18px;background: var(--paper);}
+.public-profile-card {width: min(100%, 460px);box-sizing: border-box;padding: 30px;border: 1px solid var(--line);border-radius: 20px;background: white;text-align: center;box-shadow: 0 16px 50px #202b250a;}
+.public-profile-card h1 {margin: 12px 0 6px;color: var(--ink);font-family: "Manrope", sans-serif;font-size: 28px;letter-spacing: -1px;overflow-wrap: anywhere;}
+.public-profile-avatar {width: 108px;height: 108px;margin: 24px auto 16px;display: grid;place-items: center;overflow: hidden;border-radius: 50%;background: #edf1e6;color: var(--green);font-size: 38px;font-weight: 800;}
+.public-profile-avatar img {width: 100%;height: 100%;object-fit: cover;}
+.public-profile-location {margin: 0;color: var(--muted);font-size: 13px;}
+.public-profile-bio {margin: 26px 0;padding: 20px 0;border-top: 1px solid var(--line);border-bottom: 1px solid var(--line);text-align: left;}
+.public-profile-bio h2 {margin: 0 0 10px;color: var(--ink);font-size: 16px;}
+.public-profile-bio p {margin: 0;color: var(--muted);font-size: 14px;line-height: 1.8;overflow-wrap: anywhere;}
+.public-profile-card > .button {display: inline-flex;justify-content: center;text-decoration: none;}
+.job-poster-profile {display: flex;align-items: center;gap: 10px;min-width: 0;color: inherit;text-decoration: none;}
+.job-poster-profile:hover .poster-name {text-decoration: underline;text-underline-offset: 3px;}
+.job-poster-profile .poster-avatar {flex-shrink: 0;object-fit: cover;}
+.application-applicant-profile {display: inline-flex;align-items: center;gap: 10px;min-width: 0;color: inherit;text-decoration: none;}
+.application-applicant-profile strong {overflow-wrap: anywhere;}
+.application-applicant-profile:hover strong {text-decoration: underline;text-underline-offset: 3px;}
+.application-applicant-avatar {width: 40px;height: 40px;flex-shrink: 0;border-radius: 50%;object-fit: cover;}
+.application-applicant-initial {display: inline-flex;align-items: center;justify-content: center;background: #e8eee8;color: #294b39;font-weight: 600;}
 @media (max-width: 480px) {.auth-card {padding: 28px 22px;border-radius: 18px;}}
 @media(min-width:1400px){.app-shell{padding:0 7%}.hero{min-height:485px}.job-visual{height:160px}}
 @media(max-width:1000px){.app-shell{padding:0 4%}.nav-links{gap:17px}.header-actions{gap:12px}.hero{min-height:410px}.hero h1{font-size:53px}.hero-art{transform:scale(.9);transform-origin:center right;margin-left:-25px}.jobs-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.trust-strip{grid-template-columns:repeat(3,1fr);padding:30px}.trust-intro{grid-column:1/-1}.trust-intro h2 br{display:none}.trust-intro p{max-width:500px}}

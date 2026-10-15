@@ -43,7 +43,10 @@ export default function TaskApplications({ task, onClose }) {
             status,
             created_at,
             applicant:profiles!applications_applicant_id_fkey (
-              full_name
+              id,
+              full_name,
+              avatar_url,
+              location
             )
           `)
           .eq("task_id", task.id)
@@ -182,14 +185,47 @@ export default function TaskApplications({ task, onClose }) {
             <div className="application-list">
               {applications.map((item) => (
                 <article className="application-item" key={item.id}>
-                  <div className="application-heading">
+                <div className="application-heading">
+                  <Link
+                    href={
+                      item.applicant?.id
+                        ? `/profile/${item.applicant.id}`
+                        : "#"
+                    }
+                    className="application-applicant-profile"
+                    onClick={(event) => {
+                      if (!item.applicant?.id) event.preventDefault();
+                    }}
+                    aria-label={`View ${
+                      item.applicant?.full_name || "Chambalín User"
+                    }'s profile`}
+                  >
+                    {item.applicant?.avatar_url ? (
+                      <img
+                        src={item.applicant.avatar_url}
+                        alt=""
+                        className="application-applicant-avatar"
+                      />
+                    ) : (
+                      <span className="application-applicant-avatar application-applicant-initial">
+                        {(item.applicant?.full_name || "C")
+                          .trim()
+                          .charAt(0)
+                          .toUpperCase()}
+                      </span>
+                    )}
+                
                     <strong>
                       {item.applicant?.full_name || "Chambalín User"}
                     </strong>
-                    <span className={`application-status status-${item.status}`}>
-                      {item.status}
-                    </span>
-                  </div>
+                  </Link>
+                  
+                  <span
+                    className={`application-status status-${item.status}`}
+                  >
+                    {item.status}
+                  </span>
+                </div>
 
                   <p>{item.message}</p>
 

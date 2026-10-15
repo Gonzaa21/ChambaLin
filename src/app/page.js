@@ -64,6 +64,7 @@ function toJob(task) {
     id: task.id,
     title: task.title,
     ownerId: task.owner_id,
+    avatarUrl: task.owner?.avatar_url || "",
     category,
     price: formatPrice(task),
     unit: task.task_type === "volunteer" ? "unpaid" : task.price == null ? "price TBD" : "per task",
@@ -109,7 +110,7 @@ export default function Home() {
         .select(`
           id, owner_id, title, description, location, price, task_type, status, created_at,
           category:categories(name, slug),
-          owner:profiles(full_name, location)
+          owner:profiles(id, full_name, location, avatar_url)
         `)
         .eq("status", "open")
         .order("created_at", { ascending: false });
@@ -245,7 +246,7 @@ export default function Home() {
               <div className="job-time"><Icon>◷</Icon> {job.time}</div>
               <div className="job-card-bottom"><div className="price"><strong>{job.price}</strong><span>{job.unit}</span></div><div className="rating"><span>•</span> {job.taskType === "volunteer" ? "Volunteer" : "Available"}</div></div>
               <div className="card-divider"></div>
-              <div className="job-poster"><span className={`poster-avatar ${job.color}`}>{job.initials}</span><span className="poster-name">{job.person}<small>Posted a task</small></span><button className="arrow-button" onClick={() => setSelectedJob(job)} aria-label={`View ${job.title}`}>↗</button></div>
+              <div className="job-poster"><Link href={`/profile/${job.ownerId}`} className="job-poster-profile" aria-label={`View ${job.person}'s profile`}>{job.avatarUrl ? (<img className="poster-avatar" src={job.avatarUrl} alt=""/> ) : ( <span className={`poster-avatar ${job.color}`}>{job.initials}</span>)}<span className="poster-name">{job.person}<small>Posted a task</small></span></Link><button className="arrow-button" onClick={() => setSelectedJob(job)} aria-label={`View ${job.title}`}>↗</button></div>
               <button className="card-open" onClick={() => setSelectedJob(job)}>View task <span>→</span></button>
             </div>
           </article>)}
