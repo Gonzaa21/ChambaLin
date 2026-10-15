@@ -188,7 +188,7 @@ export default function Home() {
           <button className="text-button saved-link" onClick={() => { setCategory("All"); setQuery(""); document.getElementById("explorar")?.scrollIntoView({ behavior: "smooth" }); }}>
             <Icon>♡</Icon> Saved {saved.length > 0 && <span className="saved-count">{saved.length}</span>}
           </button>
-          <button className="button button-dark button-small" onClick={() => setShowPublish(true)}><span>＋</span> Post a task</button>
+          <Link href="/post-task" className="button button-dark button-small"><span>＋</span> Post a task</Link>
           {user ? (<Link href="/account" className="header-profile" aria-label="Open your profile" title={accountProfile?.full_name || "Your profile"}>{accountProfile?.avatar_url ? ( <img src={accountProfile.avatar_url} alt=""/>) : (<span> {(accountProfile?.full_name || user.email || "U").trim().charAt(0).toUpperCase()}</span>)}</Link>) : (<Link className="button button-outline button-small" href="/auth">Sign in</Link>)}
         </div>
         <button className="menu-toggle" aria-label="Open menu" onClick={() => setMobileMenu(!mobileMenu)}>{mobileMenu ? "×" : "☰"}</button>
