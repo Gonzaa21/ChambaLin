@@ -223,6 +223,30 @@ line-height: 1.6;}
 .task-applications textarea {width: 100%;max-width: 100%;min-width: 0;box-sizing: border-box;}
 .publish-modal textarea {min-height: 130px;resize: vertical;overflow-wrap: anywhere;}
 .modal-backdrop {align-items: flex-start;}
+.account-tasks {margin-top: 32px;padding-top: 26px;border-top: 1px solid var(--line);text-align: left;min-width: 0;}
+.account-tasks-heading {display: flex;align-items: center;justify-content: space-between;gap: 12px;margin-bottom: 18px;}
+.account-tasks-heading .auth-eyebrow {margin-bottom: 7px;}
+.account-tasks-heading h2 {margin: 0;font-family: "Manrope", sans-serif;font-size: 23px;letter-spacing: -0.7px;}
+.account-new-task {flex-shrink: 0;padding: 10px 12px;border-radius: 8px;background: var(--green);color: white;font-size: 11px;font-weight: 700;}
+.account-task-list {display: grid;gap: 12px;}
+.account-task-item {min-width: 0;padding: 16px;border: 1px solid var(--line);border-radius: 12px;background: white;}
+.account-task-top,
+.account-task-meta {display: flex;align-items: center;justify-content: space-between;flex-wrap: wrap;gap: 8px;}
+.account-task-category,
+.account-task-status {font-size: 10px;color: var(--muted);}
+.account-task-status {padding: 5px 8px;border-radius: 20px;background: #f1f0e8;text-transform: capitalize;}
+.task-status-open {background: #e4f2df;color: #285b37;}
+.task-status-assigned {background: #e4edf8;color: #31577d;}
+.task-status-completed {background: #e9e5f5;color: #5c4b86;}
+.task-status-cancelled {background: #f8e4df;color: #934638;}
+.account-task-item h3 {margin: 13px 0 7px;font-family: "Manrope", sans-serif;font-size: 16px;overflow-wrap: anywhere;}
+.account-task-description {margin-bottom: 14px;color: var(--muted);font-size: 12px;line-height: 1.6;white-space: pre-wrap;overflow-wrap: anywhere;}
+.account-task-meta {justify-content: flex-start;font-size: 11px;color: var(--muted);}
+.account-task-meta strong {margin-left: auto;color: var(--green);}
+.account-task-date {margin: 12px 0 0;padding-top: 10px;border-top: 1px solid #eff0eb;color: var(--muted);font-size: 10px;}
+.account-tasks-empty {padding: 22px 14px;border: 1px dashed var(--line);border-radius: 12px;color: var(--muted);text-align: center;font-size: 12px;line-height: 1.7;}
+.account-tasks-empty .button {margin-top: 8px;}
+@media (max-width: 380px) {.account-tasks-heading {align-items: flex-start;flex-direction: column;}.account-task-item {padding: 13px;}}
 @media (max-width: 600px) {.modal-backdrop {padding: 12px;}.detail-modal,.publish-modal {width: 100%;max-height: calc(100dvh - 24px);}.publish-modal {padding: 22px;}}
 @media (max-width: 480px) {.auth-card {padding: 28px 22px;border-radius: 18px;}}
 @media(min-width:1400px){.app-shell{padding:0 7%}.hero{min-height:485px}.job-visual{height:160px}}

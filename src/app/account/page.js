@@ -20,6 +20,9 @@ export default function AccountPage() {
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
+  const [myTasks, setMyTasks] = useState([]);
+  const [tasksLoading, setTasksLoading] = useState(true);
+  const [tasksError, setTasksError] = useState("");
 
   useEffect(() => {
     if (loading) return;
@@ -102,6 +105,56 @@ export default function AccountPage() {
       setSaving(false);
     }
   }
+
+  useEffect(() => {
+    if (loading) return;
+
+    if (!user) {
+      setMyTasks([]);
+      setTasksLoading(false);
+      return;
+    }
+
+    let cancelled = false;
+
+    async function loadMyTasks() {
+      setTasksLoading(true);
+      setTasksError("");
+
+      const { data, error } = await supabase
+        .from("tasks")
+        .select(`
+          id,
+          title,
+          description,
+          location,
+          price,
+          task_type,
+          status,
+          created_at,
+          category:categories(name)
+        `)
+        .eq("owner_id", user.id)
+        .order("created_at", { ascending: false });
+
+      if (cancelled) return;
+
+      if (error) {
+        setTasksError("Unable to load your tasks. Please try again.");
+        setMyTasks([]);
+      } else {
+        setMyTasks(data || []);
+      }
+
+      setTasksLoading(false);
+    }
+
+    loadMyTasks();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [user, loading]);
 
   async function handleSignOut() {
     setError("");
@@ -234,6 +287,70 @@ export default function AccountPage() {
             {saving ? "Saving..." : "Save profile"}
           </button>
         </form>
+        
+        <section className="account-tasks">
+          <div className="account-tasks-heading">
+            <div>
+              <p className="auth-eyebrow">YOUR ACTIVITY</p>
+              <h2>My tasks</h2>
+            </div>
+                
+            <Link href="/post-task" className="account-new-task">
+              + Post a task
+            </Link>
+          </div>
+                
+          {tasksLoading ? (
+            <p className="account-tasks-empty">Loading your tasks...</p>
+          ) : tasksError ? (
+            <p className="auth-error" role="alert">{tasksError}</p>
+          ) : myTasks.length === 0 ? (
+            <div className="account-tasks-empty">
+              <p>You haven't posted any tasks yet.</p>
+              <Link href="/post-task" className="button button-dark">
+                Create your first task
+              </Link>
+            </div>
+          ) : (
+            <div className="account-task-list">
+              {myTasks.map((task) => (
+                <article className="account-task-item" key={task.id}>
+                  <div className="account-task-top">
+                    <span className="account-task-category">
+                      {task.category?.name || "General"}
+                    </span>
+              
+                    <span
+                      className={`account-task-status task-status-${task.status}`}
+                    >
+                      {task.status}
+                    </span>
+                  </div>
+              
+                  <h3>{task.title}</h3>
+              
+                  <p className="account-task-description">
+                    {task.description}
+                  </p>
+              
+                  <div className="account-task-meta">
+                    <span>{task.location || "Location not specified"}</span>
+                    <strong>
+                      {task.task_type === "volunteer"
+                        ? "Volunteer"
+                        : `$${Number(task.price || 0).toLocaleString("en-US")}`}
+                    </strong>
+                  </div>
+                      
+                  <p className="account-task-date">
+                    Posted{" "}
+                    {new Date(task.created_at).toLocaleDateString("en-GB")}
+                  </p>
+                </article>
+              ))}
+            </div>
+          )}
+        </section>
 
         <button
           className="account-signout"
