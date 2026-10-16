@@ -23,6 +23,11 @@ export default function AccountPage() {
   const [myTasks, setMyTasks] = useState([]);
   const [tasksLoading, setTasksLoading] = useState(true);
   const [tasksError, setTasksError] = useState("");
+  const [categories, setCategories] = useState([]);
+  const [editingTaskId, setEditingTaskId] = useState(null);
+  const [editForm, setEditForm] = useState({});
+  const [taskActionLoading, setTaskActionLoading] = useState(false);
+  const [taskActionMessage, setTaskActionMessage] = useState("");
 
   useEffect(() => {
     if (loading) return;
@@ -127,6 +132,7 @@ export default function AccountPage() {
           id,
           title,
           description,
+          category_id,
           location,
           price,
           task_type,
@@ -155,6 +161,22 @@ export default function AccountPage() {
       cancelled = true;
     };
   }, [user, loading]);
+
+  useEffect(() => {
+    async function loadCategories() {
+      const { data, error } = await supabase
+        .from("categories")
+        .select("id, name")
+        .eq("is_active", true)
+        .order("name");
+
+      if (!error) {
+        setCategories(data || []);
+      }
+    }
+
+    loadCategories();
+  }, []);
 
   async function handleSignOut() {
     setError("");
@@ -191,6 +213,168 @@ export default function AccountPage() {
   }
 
   const avatarUrl = profile.avatar_url.trim();
+
+  function startEditing(task) {
+    setTaskActionMessage("");
+    setEditingTaskId(task.id);
+    setEditForm({
+      title: task.title || "",
+      description: task.description || "",
+      category_id: task.category_id ? String(task.category_id) : "",
+      location: task.location || "",
+      task_type: task.task_type || "paid",
+      price: task.price == null ? "" : String(task.price),
+    });
+  }
+
+  function handleEditChange(event) {
+    const { name, value } = event.target;
+
+    setEditForm((current) => ({
+      ...current,
+      [name]: value,
+    }));
+  }
+
+  async function handleSaveTask(event, taskId) {
+    event.preventDefault();
+    setTaskActionMessage("");
+
+    if (!user) return;
+
+    const cleanTitle = editForm.title.trim();
+    const cleanDescription = editForm.description.trim();
+    const numericPrice = Number(editForm.price);
+
+    if (cleanTitle.length < 5 || cleanDescription.length < 10) {
+      setTaskActionMessage(
+        "The title must have at least 5 characters and the description at least 10."
+      );
+      return;
+    }
+
+    if (
+      editForm.task_type === "paid" &&
+      (!editForm.price || !Number.isFinite(numericPrice) ||
+        numericPrice <= 0 || numericPrice > 99999999)
+    ) {
+      setTaskActionMessage("Enter a valid budget greater than zero.");
+      return;
+    }
+
+    setTaskActionLoading(true);
+
+    try {
+      const { data, error } = await supabase
+        .from("tasks")
+        .update({
+          title: cleanTitle,
+          description: cleanDescription,
+          category_id: editForm.category_id
+            ? Number(editForm.category_id)
+            : null,
+          location: editForm.location.trim() || null,
+          task_type: editForm.task_type,
+          price: editForm.task_type === "paid" ? numericPrice : null,
+          updated_at: new Date().toISOString(),
+        })
+        .eq("id", taskId)
+        .eq("owner_id", user.id)
+        .eq("status", "open")
+        .select("id")
+        .maybeSingle();
+
+      if (error) throw error;
+
+      if (!data) {
+        throw new Error(
+          "This task could not be updated. It may no longer be open, or you may not have permission."
+        );
+      }
+
+      setMyTasks((current) =>
+        current.map((task) =>
+          task.id === taskId
+            ? {
+                ...task,
+                title: cleanTitle,
+                description: cleanDescription,
+                category_id: editForm.category_id
+                  ? Number(editForm.category_id)
+                  : null,
+                category:
+                  categories.find(
+                    (category) =>
+                      String(category.id) === editForm.category_id
+                  ) || null,
+                location: editForm.location.trim() || null,
+                task_type: editForm.task_type,
+                price: editForm.task_type === "paid" ? numericPrice : null,
+                updated_at: new Date().toISOString(),
+              }
+            : task
+        )
+      );
+
+      setEditingTaskId(null);
+      setTaskActionMessage("Task updated successfully.");
+    } catch (err) {
+      setTaskActionMessage(err.message || "Unable to update this task.");
+    } finally {
+      setTaskActionLoading(false);
+    }
+  }
+
+  async function handleCancelTask(taskId) {
+    if (!user) return;
+
+    const confirmed = window.confirm(
+      "Are you sure you want to cancel this task? It will no longer be open for applications."
+    );
+
+    if (!confirmed) return;
+
+    setTaskActionMessage("");
+    setTaskActionLoading(true);
+
+    try {
+      const { data, error } = await supabase
+        .from("tasks")
+        .update({
+          status: "cancelled",
+          updated_at: new Date().toISOString(),
+        })
+        .eq("id", taskId)
+        .eq("owner_id", user.id)
+        .eq("status", "open")
+        .select("id")
+        .maybeSingle();
+
+      if (error) throw error;
+
+      if (!data) {
+        throw new Error(
+          "This task could not be cancelled. It may no longer be open, or you may not have permission."
+        );
+      }
+
+      setMyTasks((current) =>
+        current.map((task) =>
+          task.id === taskId ? { ...task, status: "cancelled" } : task
+        )
+      );
+
+      if (editingTaskId === taskId) {
+        setEditingTaskId(null);
+      }
+
+      setTaskActionMessage("Task cancelled successfully.");
+    } catch (err) {
+      setTaskActionMessage(err.message || "Unable to cancel this task.");
+    } finally {
+      setTaskActionLoading(false);
+    }
+  }
 
   return (
     <main className="auth-page">
@@ -287,7 +471,7 @@ export default function AccountPage() {
             {saving ? "Saving..." : "Save profile"}
           </button>
         </form>
-        
+
         <section className="account-tasks">
           <div className="account-tasks-heading">
             <div>
@@ -319,36 +503,165 @@ export default function AccountPage() {
                     <span className="account-task-category">
                       {task.category?.name || "General"}
                     </span>
-              
-                    <span
-                      className={`account-task-status task-status-${task.status}`}
-                    >
+
+                    <span className={`account-task-status task-status-${task.status}`}>
                       {task.status}
                     </span>
                   </div>
-              
-                  <h3>{task.title}</h3>
-              
-                  <p className="account-task-description">
-                    {task.description}
-                  </p>
-              
-                  <div className="account-task-meta">
-                    <span>{task.location || "Location not specified"}</span>
-                    <strong>
-                      {task.task_type === "volunteer"
-                        ? "Volunteer"
-                        : `$${Number(task.price || 0).toLocaleString("en-US")}`}
-                    </strong>
-                  </div>
+
+                  {editingTaskId === task.id ? (
+                    <form
+                      className="account-task-edit-form"
+                      onSubmit={(event) => handleSaveTask(event, task.id)}
+                    >
+                      <label>
+                        Task title
+                        <input
+                          name="title"
+                          value={editForm.title}
+                          onChange={handleEditChange}
+                          required
+                          minLength={5}
+                          maxLength={120}
+                        />
+                      </label>
+                  
+                      <label>
+                        Description
+                        <textarea
+                          name="description"
+                          value={editForm.description}
+                          onChange={handleEditChange}
+                          required
+                          minLength={10}
+                          maxLength={3000}
+                          rows={5}
+                        />
+                      </label>
+                  
+                      <label>
+                        Category
+                        <select
+                          name="category_id"
+                          value={editForm.category_id}
+                          onChange={handleEditChange}
+                        >
+                          <option value="">Select a category</option>
+                          {categories.map((category) => (
+                            <option key={category.id} value={category.id}>
+                              {category.name}
+                            </option>
+                          ))}
+                        </select>
+                      </label>
+                        
+                      <label>
+                        Location
+                        <input
+                          name="location"
+                          value={editForm.location}
+                          onChange={handleEditChange}
+                          maxLength={150}
+                        />
+                      </label>
+                        
+                      <label>
+                        Task type
+                        <select
+                          name="task_type"
+                          value={editForm.task_type}
+                          onChange={handleEditChange}
+                        >
+                          <option value="paid">Paid task</option>
+                          <option value="volunteer">Volunteer opportunity</option>
+                        </select>
+                      </label>
+                        
+                      {editForm.task_type === "paid" && (
+                        <label>
+                          Budget (ARS)
+                          <input
+                            name="price"
+                            type="number"
+                            value={editForm.price}
+                            onChange={handleEditChange}
+                            min="0.01"
+                            max="99999999"
+                            step="0.01"
+                            required
+                          />
+                        </label>
+                      )}
+
+                      <div className="account-task-actions">
+                        <button
+                          className="button button-dark"
+                          type="submit"
+                          disabled={taskActionLoading}
+                        >
+                          {taskActionLoading ? "Saving..." : "Save changes"}
+                        </button>
+                    
+                        <button
+                          className="button button-outline"
+                          type="button"
+                          disabled={taskActionLoading}
+                          onClick={() => setEditingTaskId(null)}
+                        >
+                          Discard
+                        </button>
+                      </div>
+                    </form>
+                  ) : (
+                    <>
+                      <h3>{task.title}</h3>
+                  
+                      <p className="account-task-description">{task.description}</p>
+                  
+                      <div className="account-task-meta">
+                        <span>{task.location || "Location not specified"}</span>
+                        <strong>
+                          {task.task_type === "volunteer"
+                            ? "Volunteer"
+                            : `$${Number(task.price || 0).toLocaleString("en-US")}`}
+                        </strong>
+                      </div>
+                          
+                      <p className="account-task-date">
+                        Posted {new Date(task.created_at).toLocaleDateString("en-GB")}
+                      </p>
+                          
+                      {task.status === "open" && (
+                        <div className="account-task-actions">
+                          <button
+                            className="button button-outline"
+                            type="button"
+                            disabled={taskActionLoading}
+                            onClick={() => startEditing(task)}
+                          >
+                            Edit task
+                          </button>
                       
-                  <p className="account-task-date">
-                    Posted{" "}
-                    {new Date(task.created_at).toLocaleDateString("en-GB")}
-                  </p>
+                          <button
+                            className="button button-cancel-task"
+                            type="button"
+                            disabled={taskActionLoading}
+                            onClick={() => handleCancelTask(task.id)}
+                          >
+                            Cancel task
+                          </button>
+                        </div>
+                      )}
+                    </>
+                  )}
                 </article>
               ))}
             </div>
+          )}
+          {taskActionMessage && (
+            <p className="account-task-feedback" role="status">
+              {taskActionMessage}
+            </p>
           )}
         </section>
 

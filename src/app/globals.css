@@ -246,6 +246,21 @@ line-height: 1.6;}
 .account-task-date {margin: 12px 0 0;padding-top: 10px;border-top: 1px solid #eff0eb;color: var(--muted);font-size: 10px;}
 .account-tasks-empty {padding: 22px 14px;border: 1px dashed var(--line);border-radius: 12px;color: var(--muted);text-align: center;font-size: 12px;line-height: 1.7;}
 .account-tasks-empty .button {margin-top: 8px;}
+.account-task-edit-form {display: grid;gap: 14px;margin-top: 18px;}
+.account-task-edit-form label {display: grid;gap: 7px;color: var(--ink);font-size: 12px;font-weight: 700;}
+.account-task-edit-form input,
+.account-task-edit-form textarea,
+.account-task-edit-form select {width: 100%;min-width: 0;box-sizing: border-box;padding: 12px;border: 1px solid var(--line);border-radius: 9px;background: white;color: var(--ink);font: inherit;font-size: 13px;}
+.account-task-edit-form textarea {resize: vertical;line-height: 1.6;}
+.account-task-edit-form input:focus,
+.account-task-edit-form textarea:focus,
+.account-task-edit-form select:focus {outline: 2px solid #b5c89b;outline-offset: 1px;}
+.account-task-actions {display: flex;flex-wrap: wrap;gap: 9px;margin-top: 16px;}
+.account-task-actions .button {font: inherit;font-size: 12px;cursor: pointer;}
+.account-task-actions button:disabled {opacity: 0.6;cursor: wait;}
+.button-cancel-task {border: 1px solid #edcfca;border-radius: 10px;padding: 14px 19px;background: #fff5f2;color: #a33d30;font-weight: 700;}
+.button-cancel-task:hover {background: #fbe7e2;}
+.account-task-feedback {margin-top: 14px;color: var(--green);font-size: 12px;line-height: 1.6;overflow-wrap: anywhere;}
 @media (max-width: 380px) {.account-tasks-heading {align-items: flex-start;flex-direction: column;}.account-task-item {padding: 13px;}}
 @media (max-width: 600px) {.modal-backdrop {padding: 12px;}.detail-modal,.publish-modal {width: 100%;max-height: calc(100dvh - 24px);}.publish-modal {padding: 22px;}}
 @media (max-width: 480px) {.auth-card {padding: 28px 22px;border-radius: 18px;}}
