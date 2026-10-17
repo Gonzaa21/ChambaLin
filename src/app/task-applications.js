@@ -15,6 +15,7 @@ export default function TaskApplications({ task, onClose }) {
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
   const [notice, setNotice] = useState("");
+  const [decisionLoading, setDecisionLoading] = useState(false);
 
   const isOwner = Boolean(user && user.id === task.ownerId);
 
@@ -136,31 +137,52 @@ export default function TaskApplications({ task, onClose }) {
   }
 
   async function handleDecision(applicationId, status) {
+    if (decisionLoading) return;
+    if (status !== "accepted" && status !== "rejected") return;
+
+    setDecisionLoading(true);
     setError("");
     setNotice("");
 
-    const { error: updateError } = await supabase
-      .from("applications")
-      .update({ status })
-      .eq("id", applicationId)
-      .eq("task_id", task.id);
+    try {
+      const { error: updateError } = await supabase.rpc(
+        "decide_application",
+        {
+          p_application_id: applicationId,
+          p_decision: status,
+        }
+      );
 
-    if (updateError) {
-      setError("Unable to update this application. Please try again.");
-      return;
+      if (updateError) {
+        setError(
+          updateError.message ||
+            "Unable to update this application. Please try again."
+        );
+        return;
+      }
+
+      setApplications((current) =>
+        current.map((item) => {
+          if (item.id === applicationId) {
+            return { ...item, status };
+          }
+
+          if (status === "accepted" && item.status === "pending") {
+            return { ...item, status: "rejected" };
+          }
+
+          return item;
+        })
+      );
+
+      setNotice(
+        status === "accepted"
+          ? "Application accepted. The task has been assigned."
+          : "Application rejected."
+      );
+    } finally {
+      setDecisionLoading(false);
     }
-
-    setApplications((current) =>
-      current.map((item) =>
-        item.id === applicationId ? { ...item, status } : item
-      )
-    );
-
-    setNotice(
-      status === "accepted"
-        ? "Application accepted."
-        : "Application rejected."
-    );
   }
 
   return (
@@ -234,16 +256,18 @@ export default function TaskApplications({ task, onClose }) {
                       <button
                         type="button"
                         className="button button-dark"
+                        disabled={decisionLoading}
                         onClick={() => handleDecision(item.id, "accepted")}
                       >
-                        Accept
+                        {decisionLoading ? "Processing..." : "Accept"}
                       </button>
                       <button
                         type="button"
                         className="button button-outline"
+                        disabled={decisionLoading}
                         onClick={() => handleDecision(item.id, "rejected")}
                       >
-                        Reject
+                        {decisionLoading ? "Processing..." : "Reject"}
                       </button>
                     </div>
                   )}
