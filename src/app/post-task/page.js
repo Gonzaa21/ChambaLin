@@ -171,6 +171,7 @@ export default function PostTaskPage() {
               onChange={(event) => setLocation(event.target.value)}
               placeholder="e.g. Palermo, Buenos Aires"
               maxLength={150}
+              required
             />
           </label>
 
@@ -179,6 +180,7 @@ export default function PostTaskPage() {
             <select
               value={taskType}
               onChange={(event) => setTaskType(event.target.value)}
+              required
             >
               <option value="paid">Paid task</option>
               <option value="volunteer">Volunteer opportunity</option>

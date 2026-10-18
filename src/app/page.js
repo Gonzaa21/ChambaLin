@@ -17,12 +17,12 @@ const categories = [
 ];
 
 const categoryLabels = {
-  "hogar-reparaciones": "Home & Repairs",
-  "clases-particulares": "Lessons",
-  mascotas: "Pets",
-  mandados: "Errands",
-  tecnologia: "Tech",
-  "otros-servicios": "Other",
+  "home-repairs": "Home & Repairs",
+  "private-lessons": "Lessons",
+  pets: "Pets",
+  errands: "Errands",
+  technology: "Tech",
+  "other-services": "Other",
 };
 
 const categoryColors = {
