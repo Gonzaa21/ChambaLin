@@ -376,6 +376,43 @@ export default function AccountPage() {
     }
   }
 
+  async function handleCompleteTask(taskId) {
+    if (!user) return;
+
+    const confirmed = window.confirm(
+      "Mark this task as completed? This action cannot be undone."
+    );
+
+    if (!confirmed) return;
+
+    setTaskActionMessage("");
+    setTaskActionLoading(true);
+
+    try {
+      const { error } = await supabase.rpc("complete_task", {
+        p_task_id: taskId,
+      });
+
+      if (error) throw error;
+
+      setMyTasks((current) =>
+        current.map((task) =>
+          task.id === taskId
+            ? { ...task, status: "completed" }
+            : task
+        )
+      );
+
+      setTaskActionMessage("Task marked as completed.");
+    } catch (err) {
+      setTaskActionMessage(
+        err.message || "Unable to complete this task."
+      );
+    } finally {
+      setTaskActionLoading(false);
+    }
+  }
+
   return (
     <main className="auth-page">
       <section className="auth-card account-card">
@@ -391,7 +428,6 @@ export default function AccountPage() {
 
         <div className="account-avatar">
           {avatarUrl ? (
-            // eslint-disable-next-line @next/next/no-img-element
             <img
               src={avatarUrl}
               alt="Your profile"
@@ -649,6 +685,20 @@ export default function AccountPage() {
                             onClick={() => handleCancelTask(task.id)}
                           >
                             Cancel task
+                          </button>
+                        </div>
+                      )}
+                      {task.status === "assigned" && (
+                        <div className="account-task-actions">
+                          <button
+                            className="button button-dark"
+                            type="button"
+                            disabled={taskActionLoading}
+                            onClick={() => handleCompleteTask(task.id)}
+                          >
+                            {taskActionLoading
+                              ? "Updating..."
+                              : "Mark as Completed"}
                           </button>
                         </div>
                       )}
