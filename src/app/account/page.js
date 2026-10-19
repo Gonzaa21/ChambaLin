@@ -715,6 +715,10 @@ export default function AccountPage() {
           )}
         </section>
 
+        <Link className="auth-back" href="/">
+          Back to home
+        </Link>
+        
         <button
           className="account-signout"
           type="button"
@@ -723,9 +727,6 @@ export default function AccountPage() {
           Sign out
         </button>
 
-        <Link className="auth-back" href="/">
-          Back to home
-        </Link>
       </section>
     </main>
   );

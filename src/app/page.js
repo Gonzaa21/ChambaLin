@@ -261,7 +261,7 @@ export default function Home() {
         <div className="trust-step"><span className="step-number">03</span><div className="step-icon">✳</div><h3>Share your experience</h3><p>Leave a review after completing the task.</p></div>
       </section>
 
-      <footer className="footer" id="comunidad"><a className="brand footer-brand" href="#"><span className="brand-mark"><span></span><span></span><span></span></span><span>chambalín<span className="brand-dot">.</span></span></a><span>Small tasks, real solutions.</span><span className="footer-right">Made to connect <span>♥</span> nearby.</span></footer>
+      <footer className="footer" id="comunidad"><a className="brand footer-brand" href="#"><span className="brand-mark"><span></span><span></span><span></span></span><span>chambalín<span className="brand-dot">.</span></span></a><span>Small tasks, real solutions.</span><span className="footer-right">© 2026 Chambalín. <span>|</span> All rights reserved.</span></footer>
 
       {selectedJob && <div className="modal-backdrop" role="presentation" onMouseDown={(e) => { if (e.target === e.currentTarget) setSelectedJob(null); }}><section className="detail-modal" role="dialog" aria-modal="true" aria-labelledby="detail-title">
         <button className="modal-close" onClick={() => setSelectedJob(null)} aria-label="Close">×</button>
