@@ -180,12 +180,12 @@ export default function Home() {
           <span>chambalín<span className="brand-dot">.</span></span>
         </a>
         <nav className={`nav-links ${mobileMenu ? "nav-open" : ""}`}>
-          <a className="nav-active" href="#explore">Explore</a>
-          <a href="#how-it-works">How it works</a>
-          <a href="#community">Community</a>
+          <a className="nav-active" href="#explore" onClick={() => setMobileMenu(false)}>Explore</a>
+          <a href="#how-it-works" onClick={() => setMobileMenu(false)}>How it works</a>
+          <a href="#community" onClick={() => setMobileMenu(false)}>Community</a>
         </nav>
         <div className="header-actions">
-          <button className="text-button saved-link" onClick={() => { setCategory("All"); setQuery(""); document.getElementById("explorar")?.scrollIntoView({ behavior: "smooth" }); }}>
+          <button className="text-button saved-link" onClick={() => { setCategory("All"); setQuery(""); document.getElementById("explore")?.scrollIntoView({ behavior: "smooth" }); }}>
             <Icon>♡</Icon> Saved {saved.length > 0 && <span className="saved-count">{saved.length}</span>}
           </button>
           <Link href="/post-task" className="button button-dark button-small"><span>＋</span> Post a task</Link>
@@ -201,8 +201,8 @@ export default function Home() {
           <p>Find someone reliable for those small things that make a big difference.</p>
           <div className="hero-search">
             <Icon>⌕</Icon>
-            <input value={query} onChange={(e) => { setQuery(e.target.value); document.getElementById("explorar")?.scrollIntoView({ behavior: "smooth", block: "start" }); }} placeholder="e.g. fix a faucet, walk the dog..." aria-label="Search tasks" />
-            <button onClick={() => document.getElementById("explorar")?.scrollIntoView({ behavior: "smooth" })}>Search <span>↗</span></button>
+            <input value={query} onChange={(e) => { setQuery(e.target.value); document.getElementById("explore")?.scrollIntoView({ behavior: "smooth", block: "start" }); }} placeholder="e.g. fix a faucet, walk the dog..." aria-label="Search tasks" />
+            <button onClick={() => document.getElementById("explore")?.scrollIntoView({ behavior: "smooth" })}>Search <span>↗</span></button>
           </div>
           <div className="hero-footnote"><Icon>⌖</Icon> Services in your area <span className="footnote-separator">·</span> Real people, real tasks</div>
         </div>
@@ -218,7 +218,7 @@ export default function Home() {
         </div>
       </section>
 
-      <section className="category-section" id="explorar">
+      <section className="category-section" id="explore">
         <div className="section-heading category-heading">
           <div><span className="section-kicker">FIND YOUR GIG</span><h2>What do you need done?</h2></div>
         </div>
@@ -254,14 +254,22 @@ export default function Home() {
         <div className="load-more-wrap"><button className="button button-outline" onClick={() => { setQuery(""); setCategory("All"); setSort("recommended"); }}>Explore all tasks <span>↗</span></button></div>
       </section>
 
-      <section className="trust-strip" id="como-funciona">
+      <div className="community-info">
+        <h3>More than just small jobs</h3>
+        <p>
+          Chambalín connects people who need a hand with people ready to share their skills, time and experience. From occasional services to volunteering, every task is an opportunity to help and connect.
+        </p>
+        <a href="#explore">Explore available tasks ↗</a>
+      </div>
+
+      <section className="trust-strip" id="how-it-works">
         <div className="trust-intro"><span className="section-kicker">SIMPLER. CLOSER.</span><h2>A helping hand nearby<br />can change your day.</h2><p>Chambalín connects what you need with people who can help.</p></div>
         <div className="trust-step"><span className="step-number">01</span><div className="step-icon">⌕</div><h3>Find</h3><p>Search by task, category, or area.</p></div>
         <div className="trust-step"><span className="step-number">02</span><div className="step-icon">↔</div><h3>Connect</h3><p>Chat and agree on price and schedule.</p></div>
         <div className="trust-step"><span className="step-number">03</span><div className="step-icon">✳</div><h3>Share your experience</h3><p>Leave a review after completing the task.</p></div>
       </section>
 
-      <footer className="footer" id="comunidad"><a className="brand footer-brand" href="#"><span className="brand-mark"><span></span><span></span><span></span></span><span>chambalín<span className="brand-dot">.</span></span></a><span>Small tasks, real solutions.</span><span className="footer-right">© 2026 Chambalín. <span>|</span> All rights reserved.</span></footer>
+      <footer className="footer" id="community"><a className="brand footer-brand" href="#"><span className="brand-mark"><span></span><span></span><span></span></span><span>chambalín<span className="brand-dot">.</span></span></a><span>Small tasks, real solutions.</span><span className="footer-right">© 2026 Chambalín. <span>|</span> All rights reserved.</span></footer>
 
       {selectedJob && <div className="modal-backdrop" role="presentation" onMouseDown={(e) => { if (e.target === e.currentTarget) setSelectedJob(null); }}><section className="detail-modal" role="dialog" aria-modal="true" aria-labelledby="detail-title">
         <button className="modal-close" onClick={() => setSelectedJob(null)} aria-label="Close">×</button>
